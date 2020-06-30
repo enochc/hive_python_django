@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .label {
+        width:180px;
+        color:red;
+        float:left
+        }
+
+    </style>
+</head>
+
+{% for p in hive.properties %}
+<span class="label">{{p.0}}</span> = <input id="in_{{p.0}}" value="{{p.1}}"/>
+<input  type="button" value="save" onclick='doit("{{p.0}}","{{p.2}}")'><br/>
+{% endfor %}
+
+<script>
+
+
+    function doit(thing, t) {
+        eid = "in_"+thing
+
+        val = $("#"+eid)[0].value
+
+        //token = $("input[name=csrfmiddlewaretoken]")[0].value
+        token = "fix the token"
+
+        $.ajax({
+            url: "save/"+thing+"/"+val+"/",
+            data:{"type":t},
+            headers: {
+                'X-CSRF-TOKEN':token
+            },
+            method: 'POST',
+            success: function(data){
+              console.log('succes: '+data);
+            }
+         });
+        //alert(thing+"="+val +" "+token)
+    }
+<!--s = new WebSocket("ws://127.0.0.1:3000","3000");-->
+<!--s.binaryType = 'arraybuffer';-->
+<!--console.log(s);-->
+</script>
+</body>
+</html>
