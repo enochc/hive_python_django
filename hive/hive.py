@@ -48,17 +48,23 @@ class Hive:
             while self.is_running and not reader.at_eof():
                 try:
                     size_bytes = await reader.read(4)
-
                     size = int.from_bytes(size_bytes, 'big')
-                    print(f"size: {size}")
                     msg = await reader.read(size)
+                    msg_type = msg[:3].decode()
                     msg = msg[3:].decode()
-                    print(f"msg: {msg}")
-                    t_data = toml.loads(msg)
-                    for prop in t_data:
-                        data = t_data[prop]
-                        await self.prop_sender.asend((prop, data, data.__class__.__name__))
-                    print(f'Received: |{t_data}|')
+                    print(f"received: {msg_type}, {msg}")
+                    # new property
+                    if msg_type == "|P|":
+                        t_data = toml.loads(msg)
+                        for prop in t_data:
+                            data = t_data[prop]
+                            # name, value, type
+                            await self.prop_sender.asend((prop, data, data.__class__.__name__))
+                    elif msg_type == "|d|":
+                        for p in self.properties:
+                            if p[0] == msg:
+                                self.properties.remove(p)
+
                 except Exception as e:
                     print(f"closing...{e}")
                     break
