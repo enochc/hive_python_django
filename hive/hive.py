@@ -6,7 +6,7 @@ import toml
 
 class Hive:
 
-    def __init__(self, server, port, timeout=0):
+    def __init__(self, server, port, timeout=0, name="Python"):
         self.port = port
         self.server = server
         self.prop_receiver, self.prop_sender = channels.create()
@@ -14,6 +14,7 @@ class Hive:
         self.reader, self.writer = None, None
         self.timeout = timeout
         self.properties = []  # (name, value, type) tuple
+        self.name = name
 
     # def properties(self):
     #     return self.prop_receiver
@@ -45,6 +46,8 @@ class Hive:
 
     async def listen(self, reader):
         async with channels.open(self.prop_sender):
+            # send header after connect:
+            await self.write(f"|H|NAME={self.name}")
             while self.is_running and not reader.at_eof():
                 try:
                     size_bytes = await reader.read(4)
