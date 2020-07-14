@@ -15,6 +15,9 @@ class Hive:
         self.timeout = timeout
         self.properties = []  # (name, value, type) tuple
         self.name = name
+        self.peers = []  # list of strings
+        self.peer_message = ""
+        self.changed = False
 
     # def properties(self):
     #     return self.prop_receiver
@@ -48,6 +51,8 @@ class Hive:
         async with channels.open(self.prop_sender):
             # send header after connect:
             await self.write(f"|H|NAME={self.name}")
+            # request peers
+            await self.write("<p|")
             while self.is_running and not reader.at_eof():
                 try:
                     size_bytes = await reader.read(4)
@@ -67,10 +72,26 @@ class Hive:
                         for p in self.properties:
                             if p[0] == msg:
                                 self.properties.remove(p)
+                                self.changed = True
+                    elif msg_type == "<p|": # Peers list
+                        print(f"got peers: {msg}")
+                        self.peers.clear()
+                        for p in msg.split(","):
+                            s = p.split("|")[0]
+                            print(f"{s}")
+                            self.peers.append(s)
+                            self.changed = True
+                    elif msg_type == "|s|": # Peer message
+                        self.peer_message = msg
+                        self.changed = True
 
                 except Exception as e:
                     print(f"closing...{e}")
                     break
+
+    async def send_to_peer(self, peer_name, msg):
+        msg = f"|s|{peer_name}|=|{msg}"
+        await self.write(msg)
 
     async def write(self, msg):
         len_bytes = len(msg).to_bytes(4, 'big', signed=False)
@@ -96,6 +117,7 @@ class Hive:
     async def receive(self):
         async for prop in self.prop_receiver:
             self.properties.append(prop)
+            self.changed = True
             print(f"received prop: {prop}")
 
 

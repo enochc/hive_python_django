@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<br lang="en">
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <meta charset="UTF-8">
@@ -13,14 +13,41 @@
 
     </style>
 </head>
-
+<p style="color:blue;">{{hive.peer_message}}</p>
+<br/>
 {% for p in hive.properties %}
 <span class="label">{{p.0}}</span> = <input id="in_{{p.0}}" value="{{p.1}}"/>
 <input  type="button" value="save" onclick='doit("{{p.0}}","{{p.2}}")'><br/>
 {% endfor %}
-
+<br/>
+<span>Send message to peer:</span>
+<select id="peer_select">
+{% for p in hive.peers %}
+    <option>{{ p }}</option>
+{% endfor %}
+</select>
+<br/>
+Message: <input id="peer_message" type="text" style="width:300px;"/>
+<input type="button" value="Send" id="send_message_btn" onclick="sendMessage()"/>
 <script>
 
+    function sendMessage(){
+        message = $("#peer_message").val()
+        peer = $("#peer_select").val()
+        token = "fix me"
+        $.ajax({
+            url: "send/"+peer+"/",
+            data:{"msg":message},
+            headers: {
+                'X-CSRF-TOKEN':token
+            },
+            method: 'POST',
+            success: function(data){
+              console.log('success: '+data);
+            }
+         });
+        //alert(thing.val()+" "+peer.val())
+    }
 
     function doit(thing, t) {
         eid = "in_"+thing

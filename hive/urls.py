@@ -8,4 +8,5 @@ app_name = 'hive'
 urlpatterns = [
     path('', views.index, name='index'),
     path('save/<str:name>/<str:value>/', views.save, name='save'),
+    path('send/<str:name>/', views.send, name='send'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

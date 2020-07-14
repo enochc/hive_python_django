@@ -21,3 +21,10 @@ def save(request, name, value):
     h.save(name, value, t)
     return HttpResponse(response % name+value+t)
 
+
+@csrf_exempt
+def send(request, name):
+    response = "You're sending me %s"
+    msg = request.POST['msg']
+    h.send_to_peer(name, msg)
+    return HttpResponse(response % name+msg)
