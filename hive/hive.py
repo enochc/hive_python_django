@@ -61,13 +61,20 @@ class Hive:
                     msg_type = msg[:3].decode()
                     msg = msg[3:].decode()
                     print(f"received: {msg_type}, {msg}")
-                    # new property
+                    # new properties
                     if msg_type == "|P|":
                         t_data = toml.loads(msg)
                         for prop in t_data:
                             data = t_data[prop]
                             # name, value, type
                             await self.prop_sender.asend((prop, data, data.__class__.__name__))
+                    # received single propery
+                    elif msg_type == "|p|":
+                        print(f"Received property: {msg}")
+                        t_data = toml.loads(msg)
+                        for prop in t_data:
+                            data = t_data[prop]
+                            self.update_property(prop, data,  data.__class__.__name__)
                     elif msg_type == "|d|":
                         for p in self.properties:
                             if p[0] == msg:
@@ -101,6 +108,12 @@ class Hive:
         await self.writer.drain()
         print("written")
 
+    def update_property(self, name, value, type):
+        for i in range(len(self.properties)):
+            p = self.properties[i]
+            if p[0] == name:
+                self.properties[i] = (name, value, type)
+
     def set_prop(self, name, value, type):
         print(f"Save Value: {name} = {value}")
 
@@ -112,6 +125,7 @@ class Hive:
         else:
             msg = f"|p|{name}={value}"
 
+        self.update_property(name, value, type)
         asyncio.run(self.write(msg))
 
     async def receive(self):
