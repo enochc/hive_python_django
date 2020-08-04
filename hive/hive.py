@@ -49,6 +49,11 @@ class Hive:
 
     async def listen(self, reader):
         async with channels.open(self.prop_sender):
+            # send Handshake identifier
+            # self.writer.write("GET / HIVE/1.0\r\n\r\n".encode())
+            await self.writer.drain()
+
+
             # send header after connect:
             await self.write(f"|H|NAME={self.name}")
             # request peers
