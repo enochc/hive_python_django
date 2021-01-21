@@ -25,7 +25,7 @@ SECRET_KEY = '+5zm^7l7q&3!7)ux44fil)_zvo9#^yn)=fy%khq1x+c)peqlxv'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost',  '192.168.5.45', '73.228.127.138', '127.0.0.1']
 
 
 # Application definition
@@ -119,8 +119,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = '/Users/enochcarter/hive_django/hive_python_django/hive/static'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
-    '/var/www/static/',
 ]

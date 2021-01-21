@@ -4,3 +4,4 @@ manage.py
 db.sqlite3
 static
 .idea
+.DS_Store

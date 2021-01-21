@@ -34,7 +34,7 @@ class Hive:
             self.stop()
 
     async def run(self):
-
+        print(f"connect hive client to {self.server} {self.port}")
         self.reader, self.writer = await asyncio.open_connection(
             self.server, self.port)
         self.is_running = True
@@ -50,9 +50,10 @@ class Hive:
     async def listen(self, reader):
         async with channels.open(self.prop_sender):
             # send Handshake identifier
-            # self.writer.write("GET / HIVE/1.0\r\n\r\n".encode())
             await self.writer.drain()
-
+            self.writer.write("HVEP\n".encode())
+            self.writer.write(b'\x66')
+            self.writer.write("python\n".encode())
 
             # send header after connect:
             await self.write(f"|H|NAME={self.name}")

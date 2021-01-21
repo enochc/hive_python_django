@@ -23,6 +23,26 @@ def save(request, name, value):
 
 
 @csrf_exempt
+def up(request):
+    response = "Going up"
+    h.save("moveup", "true", "bool")
+    return HttpResponse(response)
+
+
+@csrf_exempt
+def down(request):
+    response = "Going Down"
+    h.save("movedown", "true", "bool")
+    return HttpResponse(response)
+
+@csrf_exempt
+def stop(request):
+    response = "Stopping"
+    h.save("moveup", "false", "bool")
+    h.save("movedown", "false", "bool")
+    return HttpResponse(response)
+
+@csrf_exempt
 def send(request, name):
     response = "You're sending me %s"
     msg = request.POST['msg']

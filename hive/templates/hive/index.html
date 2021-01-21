@@ -1,4 +1,6 @@
+
 <!DOCTYPE html>
+<html>
 <br lang="en">
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -13,6 +15,7 @@
 
     </style>
 </head>
+<body>
 <p style="color:blue;">{{hive.peer_message}}</p>
 <br/>
 {% for p in hive.properties %}
@@ -27,52 +30,11 @@
 {% endfor %}
 </select>
 <br/>
+{% load static %}
+
 Message: <input id="peer_message" type="text" style="width:300px;"/>
 <input type="button" value="Send" id="send_message_btn" onclick="sendMessage()"/>
-<script>
+<script src="{% static '/scripts.js' %}"></script>
 
-    function sendMessage(){
-        message = $("#peer_message").val()
-        peer = $("#peer_select").val()
-        token = "fix me"
-        $.ajax({
-            url: "send/"+peer+"/",
-            data:{"msg":message},
-            headers: {
-                'X-CSRF-TOKEN':token
-            },
-            method: 'POST',
-            success: function(data){
-              console.log('success: '+data);
-            }
-         });
-        //alert(thing.val()+" "+peer.val())
-    }
-
-    function doit(thing, t) {
-        eid = "in_"+thing
-
-        val = $("#"+eid)[0].value
-
-        //token = $("input[name=csrfmiddlewaretoken]")[0].value
-        token = "fix the token"
-
-        $.ajax({
-            url: "save/"+thing+"/"+val+"/",
-            data:{"type":t},
-            headers: {
-                'X-CSRF-TOKEN':token
-            },
-            method: 'POST',
-            success: function(data){
-              console.log('succes: '+data);
-            }
-         });
-        //alert(thing+"="+val +" "+token)
-    }
-<!--    s = new WebSocket("ws://127.0.0.1:3000","3000");-->
-<!--    s.binaryType = 'arraybuffer';-->
-<!--    console.log(s);-->
-</script>
 </body>
 </html>

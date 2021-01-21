@@ -7,8 +7,12 @@ from .hive import Hive
 
 class DHive:
     def __init__(self, name):
+        # 192.168.5.41:3000
+        # self.hive = Hive("192.168.5.41", 3000, name=name)
+        # self.hive = Hive("192.168.5.48", 3000, name=name)
         # self.hive = Hive("127.0.0.1", 3000, name=name)
-        self.hive = Hive("192.168.5.48", 3000, name=name)
+        self.hive = Hive("192.168.1.110", 3000, name=name)
+
         # 192.168.5.48
         t = threading.Thread(target=self.do_run)
         t.setDaemon(True)
