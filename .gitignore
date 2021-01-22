@@ -2,6 +2,6 @@ __pycache__
 venv
 manage.py
 db.sqlite3
-static
+hive/static/admin/*
 .idea
 .DS_Store
