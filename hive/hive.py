@@ -13,7 +13,7 @@ class Hive:
         self.is_running = False
         self.reader, self.writer = None, None
         self.timeout = timeout
-        self.properties = []  # (name, value, type) tuple
+        self.properties = {}  # (name, value, type) tuple
         self.name = name
         self.peers = []  # list of strings
         self.peer_message = ""
@@ -35,8 +35,8 @@ class Hive:
 
     async def run(self):
         print(f"connect hive client to {self.server} {self.port}")
-        self.reader, self.writer = await asyncio.open_connection(
-            self.server, self.port)
+        self.reader, self.writer = await asyncio.open_connection(self.server, self.port)
+        print(f">>>>>>> {self.writer}")
         self.is_running = True
         await asyncio.gather(
             self.receive(),
@@ -49,44 +49,55 @@ class Hive:
 
     async def listen(self, reader):
         async with channels.open(self.prop_sender):
-            # send Handshake identifier
-            await self.writer.drain()
-            self.writer.write("HVEP\n".encode())
-            self.writer.write(b'\x66')
-            self.writer.write("python\n".encode())
 
             # send header after connect:
-            await self.write(f"|H|NAME={self.name}")
+            header = b'\x72'
+            header_name = b'\x78'
+            peer_request = b'\x65'
+            properties = b'\x10'
+            property = b'\x11'
+            delete = b'\x12'
+            peer_message = b'\x13'
+
+            eol = bytes("\n", 'utf-8')
+            ba = "HVEP".encode()+eol+header_name+self.name.encode()+eol
+
+            print(f".... send: {ba}")
+            # await self.write(ba)
+            self.writer.write(ba)
             # request peers
-            await self.write("<p|")
+            await self.write(peer_request)
             while self.is_running and not reader.at_eof():
                 try:
                     size_bytes = await reader.read(4)
                     size = int.from_bytes(size_bytes, 'big')
+                    print(f"size: {size}")
                     msg = await reader.read(size)
-                    msg_type = msg[:3].decode()
-                    msg = msg[3:].decode()
+                    msg_type = msg[0].to_bytes(1, 'big', signed=False)
+                    msg = msg[1:].decode()
                     print(f"received: {msg_type}, {msg}")
                     # new properties
-                    if msg_type == "|P|":
+                    if msg_type == properties:
                         t_data = toml.loads(msg)
+                        print(f"Received properties: {msg}")
                         for prop in t_data:
                             data = t_data[prop]
                             # name, value, type
-                            await self.prop_sender.asend((prop, data, data.__class__.__name__))
+                            # await self.prop_sender.asend((prop, data, data.__class__.__name__))
+                            self.properties[prop] = data
                     # received single propery
-                    elif msg_type == "|p|":
+                    elif msg_type == property:
                         print(f"Received property: {msg}")
                         t_data = toml.loads(msg)
                         for prop in t_data:
                             data = t_data[prop]
                             self.update_property(prop, data,  data.__class__.__name__)
-                    elif msg_type == "|d|":
+                    elif msg_type == delete:
                         for p in self.properties:
                             if p[0] == msg:
                                 self.properties.remove(p)
                                 self.changed = True
-                    elif msg_type == "<p|": # Peers list
+                    elif msg_type == peer_request:  # Peers list
                         print(f"got peers: {msg}")
                         self.peers.clear()
                         for p in msg.split(","):
@@ -94,7 +105,7 @@ class Hive:
                             print(f"{s}")
                             self.peers.append(s)
                             self.changed = True
-                    elif msg_type == "|s|": # Peer message
+                    elif msg_type == peer_message:  # Peer message
                         self.peer_message = msg
                         self.changed = True
 
@@ -106,37 +117,40 @@ class Hive:
         msg = f"|s|{peer_name}|=|{msg}"
         await self.write(msg)
 
-    async def write(self, msg):
-        len_bytes = len(msg).to_bytes(4, 'big', signed=False)
+    async def write(self, p_bytes):
+        len_bytes = len(p_bytes).to_bytes(4, 'big', signed=False)
         self.writer.write(len_bytes)
-        self.writer.write(msg.encode())
-        print(f"write {msg}")
+        self.writer.write(p_bytes)
+        print(f"write {p_bytes}")
         await self.writer.drain()
         print("written")
 
     def update_property(self, name, value, type):
-        for i in range(len(self.properties)):
-            p = self.properties[i]
-            if p[0] == name:
-                self.properties[i] = (name, value, type)
+        if type == "str":
+            self.properties[name] = str(value)
+        elif type == bool:
+            self.properties[name] = bool(value)
+        else:  #integer
+            self.properties[name] = int(value)
 
     def set_prop(self, name, value, type):
         print(f"Save Value: {name} = {value}")
-
+        b = b'\x11'
         if type == "str":
-            msg = f"|p|{name}='{value}'"
+            msg = b+ f"{name}='{value}'".encode()
         elif type == "bool":
             val = format(f"{value}").lower()
-            msg = f"|p|{name}={val}"
+            msg = b+ f"{name}={val}".encode()
         else:
-            msg = f"|p|{name}={value}"
+            msg = b+f"{name}={value}".encode()
 
         self.update_property(name, value, type)
         asyncio.run(self.write(msg))
 
     async def receive(self):
         async for prop in self.prop_receiver:
-            self.properties.append(prop)
+            # self.properties.append(prop)
+            # self.properties[prop[0]] = prop[1]
             self.changed = True
             print(f"received prop: {prop}")
 

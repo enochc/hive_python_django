@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 
 from django.views.decorators.csrf import csrf_exempt
-
+from django.http import JsonResponse
 from .models import DHive
 
 # Create your views here.
@@ -27,6 +27,18 @@ def up(request):
     response = "Going up"
     h.save("moveup", "true", "bool")
     return HttpResponse(response)
+
+
+@csrf_exempt
+def get(request):
+    # data = {
+    #     'pt': 0,
+    #     'turn': 1,
+    #     'speed': 0,
+    #     'name': "REST"
+    # }
+    data = h.properties()
+    return JsonResponse(data)
 
 
 @csrf_exempt
